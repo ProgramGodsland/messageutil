@@ -31,7 +31,7 @@ import javax.annotation.PostConstruct;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.FanoutExchange;
+import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -56,14 +56,12 @@ public class RabbitmqConfiguration {
   private static final String LISTENER_METHOD = "receiveMessage";
 
   @Autowired
-  private MessagePropertiesLoader propertiesLoader; 
-  
-  @Value("${fanout.exchange}")
-  private String fanoutExchange;
+  private MessagePropertiesLoader propertiesLoader;
 
+  private String directExchange;
   private String queueName;
   private MessageProperties properties;
-  
+
   @PostConstruct
   private void init() {
     try {
@@ -75,17 +73,19 @@ public class RabbitmqConfiguration {
       queueName = "";
       e.printStackTrace();
     }
-     properties = propertiesLoader.getMsgProp();
+    properties = propertiesLoader.getMsgProp();
+    directExchange = properties.getRabbitmqServiceName();
+    queueName = String.format("%s-%s", directExchange, queueName);
   }
-  
+
   @Bean
   public ConnectionFactory connectionFactory() {
-      CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
-      connectionFactory.setHost(this.properties.getRabbitmqHost());
-      connectionFactory.setPort(this.properties.getRabbitmqPort());
-      connectionFactory.setUsername(this.properties.getRabbitUsername());
-      connectionFactory.setPassword(this.properties.getRabbitPasswd());
-      return connectionFactory;
+    CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
+    connectionFactory.setHost(this.properties.getRabbitmqHost());
+    connectionFactory.setPort(this.properties.getRabbitmqPort());
+    connectionFactory.setUsername(this.properties.getRabbitUsername());
+    connectionFactory.setPassword(this.properties.getRabbitPasswd());
+    return connectionFactory;
   }
 
   @Bean
@@ -94,13 +94,13 @@ public class RabbitmqConfiguration {
   }
 
   @Bean
-  FanoutExchange exchange() {
-    return new FanoutExchange(fanoutExchange);
+  DirectExchange exchange() {
+    return new DirectExchange(directExchange);
   }
 
   @Bean
-  Binding binding(Queue queue, FanoutExchange exchange) {
-    return BindingBuilder.bind(queue).to(exchange);
+  Binding binding(Queue queue, DirectExchange exchange) {
+    return BindingBuilder.bind(queue).to(exchange).with(queueName);
   }
 
   @Bean
