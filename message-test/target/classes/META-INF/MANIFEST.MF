@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Implementation-Title: message-test
+Implementation-Version: 2.0.4.1
+Built-By: irene.lu
+Implementation-Vendor-Id: com.genband.app
+Build-Jdk: 1.8.0_152
+Implementation-URL: https://projects.spring.io/spring-boot/#/spring-bo
+ ot-starter-parent/message-test
+Created-By: Maven Integration for Eclipse
+
